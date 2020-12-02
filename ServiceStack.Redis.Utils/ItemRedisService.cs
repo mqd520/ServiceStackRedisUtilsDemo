@@ -29,7 +29,7 @@ namespace ServiceStack.Redis.Utils
                 string paramStr = string.Format("key: {0}", key);
                 ConsoleHelper.WriteLine(
                     ELogCategory.Error,
-                    string.Format("ItemRedisService<{0}>.GetItem Exception: {0}{1}{2}", GetTypeName(), e.Message, Environment.NewLine, paramStr),
+                    string.Format("ItemRedisService<{0}>.GetItem Exception: {1}{2}{3}", GetTypeName(), e.Message, Environment.NewLine, paramStr),
                     true,
                     e: e
                 );
@@ -65,7 +65,7 @@ namespace ServiceStack.Redis.Utils
                 string paramStr = string.Format("key: {0}", key);
                 ConsoleHelper.WriteLine(
                     ELogCategory.Error,
-                    string.Format("ItemRedisService<{0}>.SetItem Exception: {0}{1}{2}", GetTypeName(), e.Message, Environment.NewLine, paramStr),
+                    string.Format("ItemRedisService<{0}>.SetItem Exception: {1}{2}{3}", GetTypeName(), e.Message, Environment.NewLine, paramStr),
                     true,
                     e: e
                 );
