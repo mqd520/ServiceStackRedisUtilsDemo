@@ -40,7 +40,7 @@ namespace ServiceStack.Redis.Demo.WinForm1._03_Service
         public void Init()
         {
             UserInfoRedisService = new UserInfoRedisService();
-            UserInfoRedisService.ExpireTs = new TimeSpan(0, 1, 0);
+            UserInfoRedisService.ExpireTs = new TimeSpan(0, 20, 0);
             UserInfoRedisService.Prefix = "UserInfo_";
         }
 

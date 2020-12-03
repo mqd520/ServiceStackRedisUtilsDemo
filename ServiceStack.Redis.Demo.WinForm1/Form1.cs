@@ -12,6 +12,7 @@ using Newtonsoft.Json;
 
 using Common;
 using Def;
+using ServiceStack.Redis.Utils;
 
 using ServiceStack.Redis.Demo.WinForm1._03_Service;
 
@@ -50,6 +51,19 @@ namespace ServiceStack.Redis.Demo.WinForm1
             };
 
             MyRedisService.Instance.UserInfoRedisService.SetItemByUserName(username, userinfo);
+        }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            string str = "";
+
+            using (var client = ServiceStackRedisUtils.GetReadOnlyClient())
+            {
+                string info = client.Get<string>("AAtest001");
+                str = string.Format("Addr: {0}{1}Info: {2}", client.Host + ":" + client.Port, Environment.NewLine, info);
+            }
+
+            MessageBox.Show(str, Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
     }
 }

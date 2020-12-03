@@ -57,10 +57,13 @@ namespace ServiceStack.Redis.Utils
             IEnumerable<string> ls = new List<string>();
 
             string pattern = string.Format("{0}*");
-            var client = GetClient();
+
             try
             {
-                ls = client.GetKeysByPattern(pattern);
+                using (var client = GetReadOnlyClient())
+                {
+                    ls = client.GetKeysByPattern(pattern);
+                }
             }
             catch (Exception e)
             {
@@ -83,10 +86,13 @@ namespace ServiceStack.Redis.Utils
         {
             if (ExpireTs.HasValue)
             {
-                var client = GetClient();
+
                 try
                 {
-                    client.ExpireEntryIn(key, ExpireTs.Value);
+                    using (var client = GetClient())
+                    {
+                        client.ExpireEntryIn(key, ExpireTs.Value);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -112,9 +118,11 @@ namespace ServiceStack.Redis.Utils
             try
             {
                 var keys = GetAllKeys();
-                var client = GetClient();
-                var dict = client.GetAll<T>(keys);
-                ls = dict.Select(x => x.Value).ToList();
+                using (var client = GetReadOnlyClient())
+                {
+                    var dict = client.GetAll<T>(keys);
+                    ls = dict.Select(x => x.Value).ToList();
+                }
             }
             catch (Exception e)
             {

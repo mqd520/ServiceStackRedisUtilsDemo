@@ -21,8 +21,10 @@ namespace ServiceStack.Redis.Utils
 
             try
             {
-                var client = GetClient();
-                t = client.Get<T>(key);
+                using (var client = GetReadOnlyClient())
+                {
+                    t = client.Get<T>(key);
+                }
             }
             catch (Exception e)
             {
@@ -49,15 +51,17 @@ namespace ServiceStack.Redis.Utils
 
             try
             {
-                var client = GetClient();
-                if (ExpireTs.HasValue)
+                using (var client = GetClient())
                 {
-                    b = client.Set<T>(key, item, ExpireTs.Value);
-                }
-                else
-                {
-                    
-                    b = client.Set<T>(key, item);
+                    if (ExpireTs.HasValue)
+                    {
+                        b = client.Set<T>(key, item, ExpireTs.Value);
+                    }
+                    else
+                    {
+
+                        b = client.Set<T>(key, item);
+                    }
                 }
             }
             catch (Exception e)
