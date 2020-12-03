@@ -50,29 +50,29 @@ namespace ServiceStack.Redis.Utils
             JsConfig.DateHandler = DateHandler.ISO8601DateTime;
             JsConfig.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
-            //RedisConfigurationSection redis = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
-            //string[] arrRW = redis.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
-            //string[] arrR = redis.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
+            KeepAliveService.Instance.Init();
 
-            //Prcm = new PooledRedisClientManager(arrRW, arrR, new RedisClientManagerConfig
-            //{
-            //    MaxWritePoolSize = redis.MaxWritePoolSize,
-            //    MaxReadPoolSize = redis.MaxReadPoolSize,
-            //    AutoStart = redis.AutoStart
-            //});
-            //IsSentinelMode = false;
+            RedisConfigurationSection redis = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
+            string[] arrRW = redis.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
+            string[] arrR = redis.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
 
-
-
-            IList<string> ls = new List<string>();
-            ls.Add("192.168.0.60:16379");
-            RedisSentinel rs = new RedisSentinel(ls);
-            Rcm = rs.Start();
-            rs.OnFailover = x =>
+            Prcm = new PooledRedisClientManager(arrRW, arrR, new RedisClientManagerConfig
             {
-                System.Diagnostics.Debug.WriteLine("OnFailover: 192.168.0.60:16379");
-            };
-            IsSentinelMode = true;
+                MaxWritePoolSize = redis.MaxWritePoolSize,
+                MaxReadPoolSize = redis.MaxReadPoolSize,
+                AutoStart = redis.AutoStart
+            });
+            IsSentinelMode = false;
+
+            //IList<string> ls = new List<string>();
+            //ls.Add("192.168.0.60:16379");
+            //RedisSentinel rs = new RedisSentinel(ls);
+            //Rcm = rs.Start();
+            //rs.OnFailover = x =>
+            //{
+            //    System.Diagnostics.Debug.WriteLine("OnFailover: 192.168.0.60:16379");
+            //};
+            //IsSentinelMode = true;
         }
 
         /// <summary>
@@ -80,6 +80,7 @@ namespace ServiceStack.Redis.Utils
         /// </summary>
         public static void Exit()
         {
+            KeepAliveService.Instance.Exit();
             Prcm.Dispose();
         }
 
@@ -114,7 +115,25 @@ namespace ServiceStack.Redis.Utils
             }
             else
             {
-                return Prcm.GetReadOnlyClient();
+                IRedisClient client = null;
+
+                int count = 0;
+                while (count <= 10)
+                {
+                    client = Prcm.GetReadOnlyClient();
+                    if (KeepAliveService.Instance.IsAvaiable(client))
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        client.Dispose();
+                    }
+
+                    count++;
+                }
+
+                return client;
             }
         }
         #endregion
