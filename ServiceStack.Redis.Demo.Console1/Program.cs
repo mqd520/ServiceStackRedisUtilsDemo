@@ -52,22 +52,20 @@ namespace ServiceStack.Redis.Demo.Console1
         {
             _t.Stop();
 
-            var client = ServiceStackRedisUtils.GetReadOnlyClient();
-            string value = "";
-
+            string str1 = "";
             try
             {
-                value = client.Get<string>("AAtest001");
+                using (var client = ServiceStackRedisUtils.GetReadOnlyClient())
+                {
+                    string value = client.Get<string>("AAtest001");
+                    str1 = string.Format("Addr: {0}{1}Value: {2}{1}", client.Host + ":" + client.Port, Environment.NewLine, value);
+                }
             }
             catch (Exception e1)
             {
-                client.Dispose();
                 Console.WriteLine("Redis Exception: {0}", e1.Message);
             }
 
-            client.Dispose();
-
-            string str1 = string.Format("Addr: {0}{1}Value: {2}{1}", client.Host + ":" + client.Port, Environment.NewLine, value);
             Console.WriteLine(str1);
 
             _t.Start();

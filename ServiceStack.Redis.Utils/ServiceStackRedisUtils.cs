@@ -14,11 +14,19 @@ namespace ServiceStack.Redis.Utils
     {
         #region Property
         /// <summary>
-        /// PooledRedisClientManager
+        /// Get PooledRedisClientManager
         /// </summary>
         public static PooledRedisClientManager Prcm { get; private set; }
 
-        public static IRedisClientsManager _mgr;
+        /// <summary>
+        /// Get RedisClientsManager
+        /// </summary>
+        public static IRedisClientsManager Rcm { get; private set; }
+
+        /// <summary>
+        /// Get Is Sentinel Mode
+        /// </summary>
+        public static bool IsSentinelMode { get; private set; }
         #endregion
 
 
@@ -39,30 +47,32 @@ namespace ServiceStack.Redis.Utils
         /// </summary>
         public static void Init()
         {
-            RedisConfigurationSection redis = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
-            string[] arrRW = redis.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
-            string[] arrR = redis.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
-
-            Prcm = new PooledRedisClientManager(arrRW, arrR, new RedisClientManagerConfig
-            {
-                MaxWritePoolSize = redis.MaxWritePoolSize,
-                MaxReadPoolSize = redis.MaxReadPoolSize,
-                AutoStart = redis.AutoStart
-            });
-
-
             JsConfig.DateHandler = DateHandler.ISO8601DateTime;
             JsConfig.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
-            //IList<string> ls = new List<string>();
-            //ls.Add("192.168.0.60:6380");
-            //ls.Add("192.168.0.60:6381");
-            //RedisSentinel rs = new RedisSentinel(ls);
-            //_mgr = rs.Start();
-            //rs.OnFailover = x =>
+            //RedisConfigurationSection redis = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
+            //string[] arrRW = redis.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
+            //string[] arrR = redis.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
+
+            //Prcm = new PooledRedisClientManager(arrRW, arrR, new RedisClientManagerConfig
             //{
-            //    Console.WriteLine("ssssssssssssssssssssssssssssssssssss");
-            //};
+            //    MaxWritePoolSize = redis.MaxWritePoolSize,
+            //    MaxReadPoolSize = redis.MaxReadPoolSize,
+            //    AutoStart = redis.AutoStart
+            //});
+            //IsSentinelMode = false;
+
+
+
+            IList<string> ls = new List<string>();
+            ls.Add("192.168.0.60:16379");
+            RedisSentinel rs = new RedisSentinel(ls);
+            Rcm = rs.Start();
+            rs.OnFailover = x =>
+            {
+                System.Diagnostics.Debug.WriteLine("OnFailover: 192.168.0.60:16379");
+            };
+            IsSentinelMode = true;
         }
 
         /// <summary>
@@ -79,7 +89,14 @@ namespace ServiceStack.Redis.Utils
         /// <returns></returns>
         public static IRedisClient GetClient()
         {
-            return Prcm.GetClient();
+            if (IsSentinelMode)
+            {
+                return Rcm.GetReadOnlyClient();
+            }
+            else
+            {
+                return Prcm.GetClient();
+            }
         }
 
         /// <summary>
@@ -88,7 +105,17 @@ namespace ServiceStack.Redis.Utils
         /// <returns></returns>
         public static IRedisClient GetReadOnlyClient()
         {
-            return Prcm.GetReadOnlyClient();
+            if (IsSentinelMode)
+            {
+                var client = Rcm.GetReadOnlyClient();
+                client.Password = "123456";
+
+                return client;
+            }
+            else
+            {
+                return Prcm.GetReadOnlyClient();
+            }
         }
         #endregion
     }
