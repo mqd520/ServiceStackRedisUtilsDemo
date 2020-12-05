@@ -109,6 +109,22 @@ namespace ServiceStack.Redis.Utils
         }
 
         /// <summary>
+        /// Get KeepAlive Interval
+        /// </summary>
+        [ConfigurationProperty("keepAliveInterval", DefaultValue = 10000, IsRequired = false)]
+        public int KeepAliveInterval
+        {
+            get
+            {
+                return (int)this["keepAliveInterval"];
+            }
+            set
+            {
+                this["keepAliveInterval"] = value;
+            }
+        }
+
+        /// <summary>
         /// Is Sentinel Mode
         /// </summary>
         [ConfigurationProperty("isSentinel", DefaultValue = false, IsRequired = false)]

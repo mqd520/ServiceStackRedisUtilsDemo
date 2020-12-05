@@ -37,7 +37,6 @@ namespace ServiceStack.Redis.Utils
         #region Constructor
         private KeepAliveService()
         {
-            _tKeepAlive.Interval = 2 * 1000;
             _tKeepAlive.AutoReset = false;
             _tKeepAlive.Elapsed += _tKeepAlive_Elapsed;
         }
@@ -59,6 +58,7 @@ namespace ServiceStack.Redis.Utils
         public void Init()
         {
             RedisConfigurationSection redis = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
+            _tKeepAlive.Interval = redis.KeepAliveInterval;
             string[] arrR = redis.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
             foreach (var item in arrR)
             {
