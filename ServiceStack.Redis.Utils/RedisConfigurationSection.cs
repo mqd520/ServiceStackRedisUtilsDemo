@@ -91,6 +91,70 @@ namespace ServiceStack.Redis.Utils
                 this["readOnlyHosts"] = value;
             }
         }
+
+        /// <summary>
+        /// Is KeepAlive
+        /// </summary>
+        [ConfigurationProperty("isKeepAlive", DefaultValue = true, IsRequired = false)]
+        public bool IsKeepAlive
+        {
+            get
+            {
+                return (bool)this["isKeepAlive"];
+            }
+            set
+            {
+                this["isKeepAlive"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Is Sentinel Mode
+        /// </summary>
+        [ConfigurationProperty("isSentinel", DefaultValue = false, IsRequired = false)]
+        public bool IsSentinel
+        {
+            get
+            {
+                return (bool)this["isSentinel"];
+            }
+            set
+            {
+                this["isSentinel"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Sentinel Hosts
+        /// </summary>
+        [ConfigurationProperty("sentinelHosts", DefaultValue = "", IsRequired = false)]
+        public string SentinelHosts
+        {
+            get
+            {
+                return (string)this["sentinelHosts"];
+            }
+            set
+            {
+                this["sentinelHosts"] = value;
+            }
+        }
+
+        /// <summary>
+        /// Sentinel Node Pwd
+        /// </summary>
+        [ConfigurationProperty("sentinelNodePwd", DefaultValue = "", IsRequired = false)]
+        public string SentinelNodePwd
+        {
+            get
+            {
+                return (string)this["sentinelNodePwd"];
+            }
+            set
+            {
+                this["sentinelNodePwd"] = value;
+            }
+        }
         #endregion
     }
 }

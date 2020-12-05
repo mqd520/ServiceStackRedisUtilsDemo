@@ -27,6 +27,21 @@ namespace ServiceStack.Redis.Utils
         /// Get Is Sentinel Mode
         /// </summary>
         public static bool IsSentinelMode { get; private set; }
+
+        /// <summary>
+        /// Get Sentinel Node Pwd
+        /// </summary>
+        public static string SentinelNodePwd { get; private set; } = null;
+
+        /// <summary>
+        /// Get Max Allow Re Get Client
+        /// </summary>
+        public static int MaxAllowReGetClient { get; private set; } = 10;
+
+        /// <summary>
+        /// Get Is KeepAlive Mode
+        /// </summary>
+        public static bool IsKeepAliveMode { get; private set; }
         #endregion
 
 
@@ -50,29 +65,36 @@ namespace ServiceStack.Redis.Utils
             JsConfig.DateHandler = DateHandler.ISO8601DateTime;
             JsConfig.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
-            KeepAliveService.Instance.Init();
+            RedisConfigurationSection redisSection = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
 
-            RedisConfigurationSection redis = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
-            string[] arrRW = redis.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
-            string[] arrR = redis.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
+            IsKeepAliveMode = redisSection.IsKeepAlive;
+            IsSentinelMode = redisSection.IsSentinel;
 
-            Prcm = new PooledRedisClientManager(arrRW, arrR, new RedisClientManagerConfig
+            if (IsKeepAliveMode)
             {
-                MaxWritePoolSize = redis.MaxWritePoolSize,
-                MaxReadPoolSize = redis.MaxReadPoolSize,
-                AutoStart = redis.AutoStart
-            });
-            IsSentinelMode = false;
+                KeepAliveService.Instance.Init();
+            }
 
-            //IList<string> ls = new List<string>();
-            //ls.Add("192.168.0.60:16379");
-            //RedisSentinel rs = new RedisSentinel(ls);
-            //Rcm = rs.Start();
-            //rs.OnFailover = x =>
-            //{
-            //    System.Diagnostics.Debug.WriteLine("OnFailover: 192.168.0.60:16379");
-            //};
-            //IsSentinelMode = true;
+            if (!IsSentinelMode)
+            {
+                string[] arrRW = redisSection.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
+                string[] arrR = redisSection.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
+
+                Prcm = new PooledRedisClientManager(arrRW, arrR, new RedisClientManagerConfig
+                {
+                    MaxWritePoolSize = redisSection.MaxWritePoolSize,
+                    MaxReadPoolSize = redisSection.MaxReadPoolSize,
+                    AutoStart = redisSection.AutoStart
+                });
+            }
+            else
+            {
+                SentinelNodePwd = redisSection.SentinelNodePwd;
+
+                var ls = redisSection.SentinelHosts.Split(',').Select(x => x.Trim()).ToList();
+                RedisSentinel rs = new RedisSentinel(ls);
+                Rcm = rs.Start();
+            }
         }
 
         /// <summary>
@@ -80,8 +102,19 @@ namespace ServiceStack.Redis.Utils
         /// </summary>
         public static void Exit()
         {
-            KeepAliveService.Instance.Exit();
-            Prcm.Dispose();
+            if (IsKeepAliveMode)
+            {
+                KeepAliveService.Instance.Exit();
+            }
+
+            if (Prcm != null)
+            {
+                Prcm.Dispose();
+            }
+            if (Rcm != null)
+            {
+                Rcm.Dispose();
+            }
         }
 
         /// <summary>
@@ -109,28 +142,55 @@ namespace ServiceStack.Redis.Utils
             if (IsSentinelMode)
             {
                 var client = Rcm.GetReadOnlyClient();
-                client.Password = "123456";
+                if (string.IsNullOrEmpty(SentinelNodePwd))
+                {
+                    client.Password = SentinelNodePwd;
+                }
+
+                if (IsKeepAliveMode)
+                {
+                    int count = 0;
+                    while (count <= MaxAllowReGetClient)
+                    {
+                        if (KeepAliveService.Instance.IsAvaiable(client))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            client.Dispose();
+                            client = null;
+                            client = Rcm.GetReadOnlyClient();
+
+                            count++;
+                        }
+                    }
+                }
 
                 return client;
             }
             else
             {
-                IRedisClient client = null;
+                IRedisClient client = Prcm.GetReadOnlyClient();
 
-                int count = 0;
-                while (count <= 10)
+                if (IsKeepAliveMode)
                 {
-                    client = Prcm.GetReadOnlyClient();
-                    if (KeepAliveService.Instance.IsAvaiable(client))
+                    int count = 0;
+                    while (count <= MaxAllowReGetClient)
                     {
-                        break;
-                    }
-                    else
-                    {
-                        client.Dispose();
-                    }
+                        if (KeepAliveService.Instance.IsAvaiable(client))
+                        {
+                            break;
+                        }
+                        else
+                        {
+                            client.Dispose();
+                            client = null;
+                            client = Prcm.GetReadOnlyClient();
 
-                    count++;
+                            count++;
+                        }
+                    }
                 }
 
                 return client;
