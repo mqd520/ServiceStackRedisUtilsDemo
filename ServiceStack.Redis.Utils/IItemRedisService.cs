@@ -16,12 +16,6 @@ namespace ServiceStack.Redis.Utils
         T GetItem(string key);
 
         /// <summary>
-        /// Get All Items
-        /// </summary>
-        /// <returns></returns>
-        IList<T> GetAllItems();
-
-        /// <summary>
         /// Set Item
         /// </summary>
         /// <param name="key"></param>

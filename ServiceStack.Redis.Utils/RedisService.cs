@@ -36,7 +36,13 @@ namespace ServiceStack.Redis.Utils
         /// <returns></returns>
         public IRedisClient GetClient()
         {
-            return ServiceStackRedisUtils.GetClient();
+            var client = ServiceStackRedisUtils.GetClient();
+            if (Db.HasValue)
+            {
+                client.Db = Db.Value;
+            }
+
+            return client;
         }
 
         /// <summary>
@@ -45,7 +51,13 @@ namespace ServiceStack.Redis.Utils
         /// <returns></returns>
         public IRedisClient GetReadOnlyClient()
         {
-            return ServiceStackRedisUtils.GetReadOnlyClient();
+            var client = ServiceStackRedisUtils.GetReadOnlyClient();
+            if (Db.HasValue)
+            {
+                client.Db = Db.Value;
+            }
+
+            return client;
         }
 
         /// <summary>
@@ -57,7 +69,6 @@ namespace ServiceStack.Redis.Utils
             IEnumerable<string> ls = new List<string>();
 
             string pattern = string.Format("{0}*");
-
             try
             {
                 using (var client = GetReadOnlyClient())
@@ -86,7 +97,6 @@ namespace ServiceStack.Redis.Utils
         {
             if (ExpireTs.HasValue)
             {
-
                 try
                 {
                     using (var client = GetClient())
@@ -105,6 +115,34 @@ namespace ServiceStack.Redis.Utils
                     );
                 }
             }
+        }
+
+        /// <summary>
+        /// Is Key Exist
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        public bool IsKeyExist(string key)
+        {
+            try
+            {
+                using (var client = GetReadOnlyClient())
+                {
+                    return client.ContainsKey(key);
+                }
+            }
+            catch (Exception e)
+            {
+                string paramStr = string.Format("key: {0}", key);
+                ConsoleHelper.WriteLine(
+                    ELogCategory.Error,
+                    string.Format("RedisService<{0}>.IsKeyExist Exception: {1}{2}{3}", GetTypeName(), e.Message, Environment.NewLine, paramStr),
+                    true,
+                    e: e
+                );
+            }
+
+            return false;
         }
 
         /// <summary>

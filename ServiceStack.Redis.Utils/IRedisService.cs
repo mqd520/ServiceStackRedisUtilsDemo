@@ -16,6 +16,18 @@ namespace ServiceStack.Redis.Utils
 
 
         /// <summary>
+        /// Get Client
+        /// </summary>
+        /// <returns></returns>
+        IRedisClient GetClient();
+
+        /// <summary>
+        /// Get ReadOnly Client
+        /// </summary>
+        /// <returns></returns>
+        IRedisClient GetReadOnlyClient();
+
+        /// <summary>
         /// Get All Keys
         /// </summary>
         /// <returns></returns>
@@ -26,5 +38,18 @@ namespace ServiceStack.Redis.Utils
         /// </summary>
         /// <param name="key"></param>
         void ResetExpireTime(string key);
+
+        /// <summary>
+        /// Is Key Exist
+        /// </summary>
+        /// <param name="key"></param>
+        /// <returns></returns>
+        bool IsKeyExist(string key);
+
+        /// <summary>
+        /// Get All Items
+        /// </summary>
+        /// <returns></returns>
+        IList<T> GetAllItems();
     }
 }
