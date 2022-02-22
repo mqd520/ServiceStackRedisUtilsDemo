@@ -96,6 +96,54 @@ namespace ServiceStack.Redis.Utils
         }
 
         /// <summary>
+        /// RetryCount
+        /// </summary>
+        [ConfigurationProperty("retryCount", DefaultValue = 3, IsRequired = false)]
+        public int RetryCount
+        {
+            get
+            {
+                return (int)this["retryCount"];
+            }
+            set
+            {
+                this["retryCount"] = value;
+            }
+        }
+
+        /// <summary>
+        /// RetryTimeout 
+        /// </summary>
+        [ConfigurationProperty("retryTimeout", DefaultValue = 3000, IsRequired = false)]
+        public int RetryTimeout
+        {
+            get
+            {
+                return (int)this["retryTimeout"];
+            }
+            set
+            {
+                this["retryTimeout"] = value;
+            }
+        }
+
+        /// <summary>
+        /// ConnectTimeout  
+        /// </summary>
+        [ConfigurationProperty("connectTimeout ", DefaultValue = 3000, IsRequired = false)]
+        public int ConnectTimeout
+        {
+            get
+            {
+                return (int)this["connectTimeout "];
+            }
+            set
+            {
+                this["connectTimeout "] = value;
+            }
+        }
+
+        /// <summary>
         /// Is KeepAlive
         /// </summary>
         [ConfigurationProperty("isKeepAlive", DefaultValue = true, IsRequired = false)]

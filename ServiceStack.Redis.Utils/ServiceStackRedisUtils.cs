@@ -32,6 +32,11 @@ namespace ServiceStack.Redis.Utils
         public static IRedisClientsManager Rcm { get; private set; }
 
         /// <summary>
+        /// Get RedisConfigSection
+        /// </summary>
+        public static RedisConfigurationSection RedisConfigSection { get; private set; }
+
+        /// <summary>
         /// Get Is Sentinel Mode
         /// </summary>
         public static bool IsSentinelMode { get; private set; }
@@ -73,33 +78,33 @@ namespace ServiceStack.Redis.Utils
             JsConfig.DateHandler = DateHandler.ISO8601DateTime;
             JsConfig.DateTimeFormat = "yyyy-MM-dd HH:mm:ss";
 
-            RedisConfigurationSection redisSection = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
+            RedisConfigSection = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
 
-            IsKeepAliveMode = redisSection.IsKeepAlive;
-            IsSentinelMode = redisSection.IsSentinel;
-
-            if (IsKeepAliveMode)
-            {
-                KeepAliveService.Instance.Init();
-            }
+            IsKeepAliveMode = RedisConfigSection.IsKeepAlive;
+            IsSentinelMode = RedisConfigSection.IsSentinel;
 
             if (!IsSentinelMode)
             {
-                string[] arrRW = redisSection.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
-                string[] arrR = redisSection.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
+                if (IsKeepAliveMode)
+                {
+                    KeepAliveService.Instance.Init();
+                }
+
+                string[] arrRW = RedisConfigSection.ReadWriteHosts.Split(',').Select(x => x.Trim()).ToArray();
+                string[] arrR = RedisConfigSection.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
 
                 Prcm = new PooledRedisClientManager(arrRW, arrR, new RedisClientManagerConfig
                 {
-                    MaxWritePoolSize = redisSection.MaxWritePoolSize,
-                    MaxReadPoolSize = redisSection.MaxReadPoolSize,
-                    AutoStart = redisSection.AutoStart
+                    MaxWritePoolSize = RedisConfigSection.MaxWritePoolSize,
+                    MaxReadPoolSize = RedisConfigSection.MaxReadPoolSize,
+                    AutoStart = RedisConfigSection.AutoStart
                 });
             }
             else
             {
-                SentinelNodePwd = redisSection.SentinelNodePwd;
+                SentinelNodePwd = RedisConfigSection.SentinelNodePwd;
 
-                var ls = redisSection.SentinelHosts.Split(',').Select(x => x.Trim()).ToList();
+                var ls = RedisConfigSection.SentinelHosts.Split(',').Select(x => x.Trim()).ToList();
                 Sentinel = new RedisSentinel(ls);
                 Rcm = Sentinel.Start();
             }
@@ -202,6 +207,20 @@ namespace ServiceStack.Redis.Utils
                 }
 
                 return client;
+            }
+        }
+
+        /// <summary>
+        /// Set Redis Client Options
+        /// </summary>
+        /// <param name="client"></param>
+        public static void SetRedisClientOptions(IRedisClient client)
+        {
+            if (client != null)
+            {
+                client.RetryCount = RedisConfigSection.RetryCount;
+                client.RetryTimeout = RedisConfigSection.RetryTimeout;
+                client.ConnectTimeout = RedisConfigSection.ConnectTimeout;
             }
         }
         #endregion
