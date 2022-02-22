@@ -60,9 +60,8 @@ namespace ServiceStack.Redis.Utils
         /// </summary>
         public void Init()
         {
-            RedisConfigurationSection redis = ConfigurationManager.GetSection("redis") as RedisConfigurationSection;
-            _tKeepAlive.Interval = redis.KeepAliveInterval;
-            string[] arrR = redis.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
+            _tKeepAlive.Interval = ServiceStackRedisUtils.RedisConfigSection.KeepAliveInterval;
+            string[] arrR = ServiceStackRedisUtils.RedisConfigSection.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
             foreach (var item in arrR)
             {
                 var info = HostInfoTool.Parse(item);
@@ -122,13 +121,13 @@ namespace ServiceStack.Redis.Utils
                 {
                     bOnline = item.Ping();
                 }
-                catch (Exception e1)
+                catch (Exception ex)
                 {
                     ConsoleHelper.WriteLine(
                         ELogCategory.Warn,
-                        string.Format("Miss Connection With {0}", addr),
+                        string.Format("Miss Connection With Redis Server: {0}", addr),
                         true,
-                        e: e1
+                        e: ex
                     );
                 }
 

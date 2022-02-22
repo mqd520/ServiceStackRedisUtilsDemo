@@ -99,6 +99,8 @@
     <Compile Include="03 Service\IRedisService.cs" />
     <Compile Include="03 Service\ItemRedisService.cs" />
     <Compile Include="KeepAliveService.cs" />
+    <Compile Include="MyLog.cs" />
+    <Compile Include="MyLogFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="03 Service\RedisService.cs" />
     <Compile Include="ServiceStackRedisUtils.cs" />
@@ -112,6 +114,9 @@
       <Project>{21aeecdb-3f06-4e66-9322-ac796148a0d2}</Project>
       <Name>Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Logger.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

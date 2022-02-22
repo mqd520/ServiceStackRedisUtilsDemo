@@ -5,8 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Configuration;
 
-using ServiceStack.Redis;
 using ServiceStack.Text;
+using ServiceStack.Logging;
 
 namespace ServiceStack.Redis.Utils
 {
@@ -82,6 +82,15 @@ namespace ServiceStack.Redis.Utils
 
             IsKeepAliveMode = RedisConfigSection.IsKeepAlive;
             IsSentinelMode = RedisConfigSection.IsSentinel;
+
+            RedisConfig.EnableVerboseLogging = true;
+            RedisConfig.DefaultRetryTimeout = RedisConfigSection.RetryTimeout;
+            RedisConfig.DefaultConnectTimeout = RedisConfigSection.ConnectTimeout;
+
+            if (RedisConfigSection.EnableLog)
+            {
+                LogManager.LogFactory = new MyLogFactory();
+            }
 
             if (!IsSentinelMode)
             {
@@ -184,7 +193,7 @@ namespace ServiceStack.Redis.Utils
             }
             else
             {
-                IRedisClient client = Prcm.GetReadOnlyClient();
+                var client = Prcm.GetReadOnlyClient();
 
                 if (IsKeepAliveMode)
                 {
@@ -207,20 +216,6 @@ namespace ServiceStack.Redis.Utils
                 }
 
                 return client;
-            }
-        }
-
-        /// <summary>
-        /// Set Redis Client Options
-        /// </summary>
-        /// <param name="client"></param>
-        public static void SetRedisClientOptions(IRedisClient client)
-        {
-            if (client != null)
-            {
-                client.RetryCount = RedisConfigSection.RetryCount;
-                client.RetryTimeout = RedisConfigSection.RetryTimeout;
-                client.ConnectTimeout = RedisConfigSection.ConnectTimeout;
             }
         }
         #endregion

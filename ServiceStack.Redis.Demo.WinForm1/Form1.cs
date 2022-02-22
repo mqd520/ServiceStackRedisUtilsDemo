@@ -21,9 +21,20 @@ namespace ServiceStack.Redis.Demo.WinForm1
 {
     public partial class Form1 : Form
     {
+        private System.Timers.Timer t = new System.Timers.Timer();
+
         public Form1()
         {
+            t.Interval = 1000;
+            t.AutoReset = true;
+            t.Elapsed += T_Elapsed;
+
             InitializeComponent();
+        }
+
+        private void T_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -33,10 +44,16 @@ namespace ServiceStack.Redis.Demo.WinForm1
 
         private void button1_Click(object sender, EventArgs e)
         {
-            var userinfo = MyRedisService.Instance.UserInfoRedisService.GetItemByUserName("AAtest043");
-            var str = JsonConvert.SerializeObject(userinfo, Formatting.Indented);
+            //var userinfo = MyRedisService.Instance.UserInfoRedisService.GetItemByUserName("AAtest043");
+            //var str = JsonConvert.SerializeObject(userinfo, Formatting.Indented);
 
-            MessageBox.Show(str, Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //MessageBox.Show(str, Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+            using (var client = ServiceStackRedisUtils.GetClient())
+            {
+                var value = client.Get<string>("key");
+                System.Diagnostics.Debug.WriteLine(string.Format("key = {0}", value));
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)

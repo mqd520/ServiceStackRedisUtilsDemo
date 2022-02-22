@@ -64,6 +64,22 @@ namespace ServiceStack.Redis.Utils
         }
 
         /// <summary>
+        /// Auto Start
+        /// </summary>
+        [ConfigurationProperty("enableLog", DefaultValue = false, IsRequired = false)]
+        public bool EnableLog
+        {
+            get
+            {
+                return (bool)this["enableLog"];
+            }
+            set
+            {
+                this["enableLog"] = value;
+            }
+        }
+
+        /// <summary>
         /// Read Write Hosts
         /// </summary>
         [ConfigurationProperty("readWriteHosts", DefaultValue = "127.0.0.1:6379", IsRequired = false)]
@@ -96,22 +112,6 @@ namespace ServiceStack.Redis.Utils
         }
 
         /// <summary>
-        /// RetryCount
-        /// </summary>
-        [ConfigurationProperty("retryCount", DefaultValue = 3, IsRequired = false)]
-        public int RetryCount
-        {
-            get
-            {
-                return (int)this["retryCount"];
-            }
-            set
-            {
-                this["retryCount"] = value;
-            }
-        }
-
-        /// <summary>
         /// RetryTimeout 
         /// </summary>
         [ConfigurationProperty("retryTimeout", DefaultValue = 3000, IsRequired = false)]
@@ -130,16 +130,16 @@ namespace ServiceStack.Redis.Utils
         /// <summary>
         /// ConnectTimeout  
         /// </summary>
-        [ConfigurationProperty("connectTimeout ", DefaultValue = 3000, IsRequired = false)]
+        [ConfigurationProperty("connectTimeout", DefaultValue = 3000, IsRequired = false)]
         public int ConnectTimeout
         {
             get
             {
-                return (int)this["connectTimeout "];
+                return (int)this["connectTimeout"];
             }
             set
             {
-                this["connectTimeout "] = value;
+                this["connectTimeout"] = value;
             }
         }
 
