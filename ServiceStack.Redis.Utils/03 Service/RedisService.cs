@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using Common;
 
-namespace ServiceStack.Redis.Utils
+namespace ServiceStack.Redis.Utils._03_Service
 {
     public class RedisService<T> : IRedisService<T>
     {

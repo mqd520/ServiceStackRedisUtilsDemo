@@ -9,6 +9,9 @@ using System.Collections;
 
 namespace ServiceStack.Redis.Utils
 {
+    /// <summary>
+    /// RedisConfigurationSection
+    /// </summary>
     public class RedisConfigurationSection : ConfigurationSection
     {
         #region Property

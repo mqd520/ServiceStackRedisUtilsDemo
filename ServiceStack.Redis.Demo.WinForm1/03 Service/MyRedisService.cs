@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using RedisService;
+using ServiceStack.Redis.Utils._03_Service;
 
 namespace ServiceStack.Redis.Demo.WinForm1._03_Service
 {

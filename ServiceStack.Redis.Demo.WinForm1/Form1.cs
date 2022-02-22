@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using Common;
 using Def;
 using ServiceStack.Redis.Utils;
+using ServiceStack.Redis.Utils._03_Service;
 
 using ServiceStack.Redis.Demo.WinForm1._03_Service;
 

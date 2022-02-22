@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ServiceStack.Redis.Utils
+namespace ServiceStack.Redis.Utils._03_Service
 {
     public interface IItemRedisService<T> : IRedisService<T>
     {

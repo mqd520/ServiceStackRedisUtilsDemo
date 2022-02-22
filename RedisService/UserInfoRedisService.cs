@@ -8,6 +8,7 @@ using ServiceStack.Redis;
 
 using Common;
 using ServiceStack.Redis.Utils;
+using ServiceStack.Redis.Utils._03_Service;
 using Def;
 
 namespace RedisService

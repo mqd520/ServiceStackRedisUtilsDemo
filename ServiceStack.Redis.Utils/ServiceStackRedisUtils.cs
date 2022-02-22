@@ -10,6 +10,9 @@ using ServiceStack.Text;
 
 namespace ServiceStack.Redis.Utils
 {
+    /// <summary>
+    /// ServiceStack.Redis Utils
+    /// </summary>
     public static class ServiceStackRedisUtils
     {
         #region Property
@@ -17,6 +20,11 @@ namespace ServiceStack.Redis.Utils
         /// Get PooledRedisClientManager
         /// </summary>
         public static PooledRedisClientManager Prcm { get; private set; }
+
+        /// <summary>
+        /// Get Sentinel
+        /// </summary>
+        public static RedisSentinel Sentinel { get; private set; }
 
         /// <summary>
         /// Get RedisClientsManager
@@ -92,8 +100,8 @@ namespace ServiceStack.Redis.Utils
                 SentinelNodePwd = redisSection.SentinelNodePwd;
 
                 var ls = redisSection.SentinelHosts.Split(',').Select(x => x.Trim()).ToList();
-                RedisSentinel rs = new RedisSentinel(ls);
-                Rcm = rs.Start();
+                Sentinel = new RedisSentinel(ls);
+                Rcm = Sentinel.Start();
             }
         }
 
@@ -125,7 +133,7 @@ namespace ServiceStack.Redis.Utils
         {
             if (IsSentinelMode)
             {
-                return Rcm.GetReadOnlyClient();
+                return Rcm.GetClient();
             }
             else
             {

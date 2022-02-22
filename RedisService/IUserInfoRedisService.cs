@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using ServiceStack.Redis.Utils;
+using ServiceStack.Redis.Utils._03_Service;
 using Def;
 
 namespace RedisService

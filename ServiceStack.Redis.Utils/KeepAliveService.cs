@@ -13,7 +13,10 @@ using ServiceStack.Redis.Utils._02_Common;
 
 namespace ServiceStack.Redis.Utils
 {
-    public class KeepAliveService
+    /// <summary>
+    /// KeepAliveService
+    /// </summary>
+    internal class KeepAliveService
     {
         #region Field
         private object _obj = new object();

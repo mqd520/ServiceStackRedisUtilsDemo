@@ -86,12 +86,12 @@
   <ItemGroup>
     <Compile Include="00 Def\HostInfo.cs" />
     <Compile Include="02 Common\HostInfoTool.cs" />
-    <Compile Include="IItemRedisService.cs" />
-    <Compile Include="IRedisService.cs" />
-    <Compile Include="ItemRedisService.cs" />
+    <Compile Include="03 Service\IItemRedisService.cs" />
+    <Compile Include="03 Service\IRedisService.cs" />
+    <Compile Include="03 Service\ItemRedisService.cs" />
     <Compile Include="KeepAliveService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RedisService.cs" />
+    <Compile Include="03 Service\RedisService.cs" />
     <Compile Include="ServiceStackRedisUtils.cs" />
     <Compile Include="RedisConfigurationSection.cs" />
   </ItemGroup>
