@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Configuration;
+using System.Net.Sockets;
 
 using Common;
 
@@ -21,9 +22,9 @@ namespace ServiceStack.Redis.Utils
         #region Field
         private object _obj = new object();
 
-        private IList<IRedisClient> _lsRedisClients = new List<IRedisClient>();
+        private IList<KeepAliveInfo> _lsKeepAliveInfos = new List<KeepAliveInfo>();
 
-        private IList<StatusInfo> _lsStatusInfos = new List<StatusInfo>();
+        private IList<RedisStatusInfo> _lsStatusInfos = new List<RedisStatusInfo>();
 
         private Timer _tKeepAlive = new Timer();
         #endregion
@@ -64,10 +65,10 @@ namespace ServiceStack.Redis.Utils
             string[] arrR = ServiceStackRedisUtils.RedisConfigSection.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
             foreach (var item in arrR)
             {
-                var info = HostInfoTool.Parse(item);
-                _lsRedisClients.Add(new RedisClient(info.Ip, info.Port, info.Pwd));
+                var info = RedisConnectionInfoTool.Parse(item);
+                _lsKeepAliveInfos.Add(new KeepAliveInfo(info.Ip, info.Port, info.Pwd));
 
-                _lsStatusInfos.Add(new StatusInfo
+                _lsStatusInfos.Add(new RedisStatusInfo
                 {
                     Addr = string.Format("{0}:{1}", info.Ip, info.Port),
                     IsOnline = true
@@ -110,60 +111,179 @@ namespace ServiceStack.Redis.Utils
         {
             _tKeepAlive.Stop();
 
-            IList<StatusInfo> ls = new List<StatusInfo>();
+            IList<RedisStatusInfo> ls = new List<RedisStatusInfo>();
 
-            foreach (var item in _lsRedisClients)
+            foreach (var item in _lsKeepAliveInfos)
             {
                 bool bOnline = false;
-                string addr = string.Format("{0}:{1}", item.Host, item.Port);
+                string addr = string.Format("{0}:{1}", item.Ip, item.Port);
 
-                try
+                if (item.TcpClient == null)
                 {
-                    bOnline = item.Ping();
-                }
-                catch (Exception ex)
-                {
-                    ConsoleHelper.WriteLine(
-                        ELogCategory.Warn,
-                        string.Format("Miss Connection With Redis Server: {0}", addr),
-                        true,
-                        e: ex
-                    );
-                }
-
-                ls.Add(new StatusInfo
-                {
-                    Addr = addr,
-                    IsOnline = bOnline
-                });
-            }
-
-            foreach (var item in ls)
-            {
-                var item1 = _lsStatusInfos.FirstOrDefault(x => x.Addr.Equals(item.Addr));
-                if (item1 != null)
-                {
-                    item1.IsOnline = item.IsOnline;
-                }
-                else
-                {
-                    _lsStatusInfos.Add(new StatusInfo
+                    item.TcpClient = new TcpClient();
+                    StartTcpClientConnect(item.TcpClient, item.Ip, item.Port);
+                    if (item.TcpClient.Connected)
                     {
-                        Addr = item.Addr,
-                        IsOnline = item.IsOnline
-                    });
+                        SendPwd(item.TcpClient, item.Pwd);
+                    }
                 }
+                else if (!item.TcpClient.Connected)
+                {
+                    item.TcpClient.Close();
+                    item.TcpClient.Dispose();
+
+                    item.TcpClient = new TcpClient();
+                    StartTcpClientConnect(item.TcpClient, item.Ip, item.Port);
+                    if (item.TcpClient.Connected)
+                    {
+                        SendPwd(item.TcpClient, item.Pwd);
+                    }
+                }
+
+                if (item.TcpClient.Connected)
+                {
+                    bOnline = SendPing(item.TcpClient, ServiceStackRedisUtils.RedisConfigSection.keepAliveTimeout);
+                }
+
+                //ls.Add(new RedisStatusInfo
+                //{
+                //    Addr = addr,
+                //    IsOnline = bOnline
+                //});
             }
+
+            //var lsStatusChanged = new List<RedisStatusInfo>();
+            //foreach (var item in ls)
+            //{
+            //    var item1 = _lsStatusInfos.FirstOrDefault(x => x.Addr.Equals(item.Addr));
+            //    if (item1 != null)
+            //    {
+            //        if (item.IsOnline != item1.IsOnline)
+            //        {
+            //            lsStatusChanged.Add(new RedisStatusInfo
+            //            {
+            //                Addr = item1.Addr,
+            //                IsOnline = item.IsOnline
+            //            });
+            //        }
+            //        item1.IsOnline = item.IsOnline;
+            //    }
+            //}
+
+            //if (lsStatusChanged.Count > 0)
+            //{
+            //    if (ServiceStackRedisUtils.RedisStatusChangedHandle != null)
+            //    {
+            //        try
+            //        {
+            //            ServiceStackRedisUtils.RedisStatusChangedHandle.Invoke(lsStatusChanged);
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            CommonLogger.WriteLog(
+            //                ELogCategory.Fatal,
+            //                string.Format("ServiceStack.Redis.Utils Redis Status Changed Exception: ", ex.Message),
+            //                e: ex
+            //            );
+            //        }
+            //    }
+            //}
 
             _tKeepAlive.Start();
         }
+
+        private bool SendPing(TcpClient client, int timeout)
+        {
+            var buf = RedisCmdUtils.Ping();
+            ConsoleHelper.WriteLine(
+                ELogCategory.Info,
+                string.Format("Send Ping to {0}", client.Client.RemoteEndPoint.ToString()),
+                true
+            );
+            var buf2 = SendAndRecv(client, buf, 0, buf.Length, 1 * 1000, ServiceStackRedisUtils.RedisConfigSection.keepAliveTimeout);
+            if (buf2 != null)
+            {
+                string str = Encoding.UTF8.GetString(buf2);
+                ConsoleHelper.WriteLine(
+                    ELogCategory.Info,
+                    string.Format("Recv Pong from {0}: {1}", client.Client.RemoteEndPoint.ToString(), str)
+                );
+                if (str.Contains("PONG"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private void SendPwd(TcpClient client, string pwd)
+        {
+            if (!string.IsNullOrEmpty(pwd))
+            {
+
+            }
+        }
+
+        private void StartTcpClientConnect(TcpClient client, string ip, int port)
+        {
+            try
+            {
+                client.ConnectAsync(ip, port).Wait(ServiceStackRedisUtils.RedisConfigSection.keepAliveTimeout);
+            }
+            catch (Exception ex)
+            {
+                CommonLogger.WriteLog(
+                    ELogCategory.Fatal,
+                    string.Format("ServiceStack.Redis.Utils KeepAlive Connect Redis Exception: {0}", ex.Message),
+                    e: ex
+                );
+            }
+        }
+
+        private byte[] SendAndRecv(TcpClient client,
+            byte[] buf, int offset, int length,
+            int writeTimeout, int recvTimeout)
+        {
+            byte[] buf2 = null;
+            //Console.WriteLine(string.Format("Client Socket: {0}", client.Client.Handle));
+
+            try
+            {
+                var ns = client.GetStream();
+                ns.WriteAsync(buf, 0, buf.Length).Wait(writeTimeout);
+
+                long timestamp = DateTime.Now.GetMilliTimestamp();
+                while (true)
+                {
+                    System.Threading.Thread.SpinWait(100);
+
+                    if (client.Available > 0)
+                    {
+                        buf2 = new byte[client.Available];
+                        ns.Read(buf2, 0, buf2.Length);
+
+                        break;
+                    }
+
+                    long timestamp2 = DateTime.Now.GetMilliTimestamp();
+                    if (timestamp2 - timestamp > recvTimeout)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                CommonLogger.WriteLog(
+                    ELogCategory.Fatal,
+                    string.Format("ServiceStack.Redis.Utils SendAndRecv Exception: {0}", ex.Message),
+                    e: ex
+                );
+            }
+
+            return buf2;
+        }
         #endregion
-    }
-
-    internal class StatusInfo
-    {
-        public string Addr { get; set; }
-
-        public bool IsOnline { get; set; }
     }
 }

@@ -176,6 +176,22 @@ namespace ServiceStack.Redis.Utils
         }
 
         /// <summary>
+        /// Get keepAliveTimeout
+        /// </summary>
+        [ConfigurationProperty("keepAliveTimeout", DefaultValue = 10000, IsRequired = false)]
+        public int keepAliveTimeout
+        {
+            get
+            {
+                return (int)this["keepAliveTimeout"];
+            }
+            set
+            {
+                this["keepAliveTimeout"] = value;
+            }
+        }
+
+        /// <summary>
         /// Is Sentinel Mode
         /// </summary>
         [ConfigurationProperty("isSentinel", DefaultValue = false, IsRequired = false)]

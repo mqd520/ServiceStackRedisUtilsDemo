@@ -9,11 +9,11 @@ using ServiceStack.Redis.Utils._00_Def;
 
 namespace ServiceStack.Redis.Utils._02_Common
 {
-    public static class HostInfoTool
+    public static class RedisConnectionInfoTool
     {
-        public static HostInfo Parse(string host)
+        public static RedisConnectionInfo Parse(string host)
         {
-            HostInfo info = new HostInfo();
+            RedisConnectionInfo info = new RedisConnectionInfo();
 
             string host1 = host;
             if (!string.IsNullOrEmpty(host1))

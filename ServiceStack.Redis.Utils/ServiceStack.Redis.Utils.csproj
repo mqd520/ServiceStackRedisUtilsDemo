@@ -93,8 +93,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="00 Def\HostInfo.cs" />
-    <Compile Include="02 Common\HostInfoTool.cs" />
+    <Compile Include="00 Def\RedisConnectionInfo.cs" />
+    <Compile Include="00 Def\KeepAliveInfo.cs" />
+    <Compile Include="00 Def\RedisStatusInfo.cs" />
+    <Compile Include="02 Common\RedisConnectionInfoTool.cs" />
+    <Compile Include="02 Common\RedisCmdUtils.cs" />
     <Compile Include="03 Service\IItemRedisService.cs" />
     <Compile Include="03 Service\IRedisService.cs" />
     <Compile Include="03 Service\ItemRedisService.cs" />

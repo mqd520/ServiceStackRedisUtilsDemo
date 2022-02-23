@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ServiceStack.Redis.Utils._00_Def
 {
-    public class HostInfo
+    public class RedisConnectionInfo
     {
         public string Ip { get; set; }
 

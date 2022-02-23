@@ -17,6 +17,11 @@ namespace Common
             return (int)((datetime - startTime).TotalSeconds);
         }
 
+        public static long GetMilliTimestamp(this DateTime datetime)
+        {
+            return ((DateTime.Now.ToUniversalTime().Ticks - 621355968000000000) / 10000);
+        }
+
         public static DateTime GetTodayEndTime(this DateTime datetime)
         {
             return new DateTime(datetime.Year, datetime.Month, datetime.Day, 23, 59, 59);

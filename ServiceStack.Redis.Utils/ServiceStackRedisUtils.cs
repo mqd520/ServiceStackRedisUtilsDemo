@@ -8,6 +8,8 @@ using System.Configuration;
 using ServiceStack.Text;
 using ServiceStack.Logging;
 
+using ServiceStack.Redis.Utils._00_Def;
+
 namespace ServiceStack.Redis.Utils
 {
     /// <summary>
@@ -55,6 +57,11 @@ namespace ServiceStack.Redis.Utils
         /// Get Is KeepAlive Mode
         /// </summary>
         public static bool IsKeepAliveMode { get; private set; }
+
+        /// <summary>
+        /// Get or Set RedisStatusChangedHandle
+        /// </summary>
+        public static Action<IEnumerable<RedisStatusInfo>> RedisStatusChangedHandle { get; set; }
         #endregion
 
 
