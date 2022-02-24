@@ -5,7 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
 using System.Threading;
+using System.IO;
 
+using log4net;
+using log4net.Config;
 using Common;
 using ServiceStack.Redis.Utils;
 
@@ -21,6 +24,9 @@ namespace ServiceStack.Redis.Demo.Console1
 
         static void Main(string[] args)
         {
+            XmlConfigurator.Configure(new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "log4net.config"));
+            ConsoleHelper.WriteLine(ELogCategory.Info, string.Format("ServiceStack.Redis.Demo.Console1 Startup..."), true);
+
             ServiceStackRedisUtils.Init();
             ServiceStackRedisUtils.RedisStatusChangedHandle = ls =>
             {

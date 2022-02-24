@@ -118,31 +118,44 @@ namespace ServiceStack.Redis.Utils
                 bool bOnline = false;
                 string addr = string.Format("{0}:{1}", item.Ip, item.Port);
 
-                if (item.TcpClient == null)
+                bool bIsConnected = true;
+                if (item.TcpClient == null || (item.TcpClient != null && item.TcpClient.Client == null))
                 {
                     item.TcpClient = new TcpClient();
-                    StartTcpClientConnect(item.TcpClient, item.Ip, item.Port);
-                    if (item.TcpClient.Connected)
-                    {
-                        SendPwd(item.TcpClient, item.Pwd);
-                    }
-                }
-                else if (!item.TcpClient.Connected)
-                {
-                    item.TcpClient.Close();
-                    item.TcpClient.Dispose();
-
-                    item.TcpClient = new TcpClient();
-                    StartTcpClientConnect(item.TcpClient, item.Ip, item.Port);
-                    if (item.TcpClient.Connected)
-                    {
-                        SendPwd(item.TcpClient, item.Pwd);
-                    }
+                    bIsConnected = false;
                 }
 
-                if (item.TcpClient.Connected)
+                bool bIsNeedSendPwd = false;
+                if (!bIsConnected)
                 {
-                    bOnline = SendPing(item.TcpClient);
+                    bIsNeedSendPwd = true;
+                    bIsConnected = StartTcpClientConnect(item.TcpClient, item.Ip, item.Port);
+                    if (!bIsConnected)
+                    {
+                        item.TcpClient.Close();
+                        item.TcpClient = null;
+
+                        ConsoleHelper.WriteLine(
+                            ELogCategory.Warn,
+                            string.Format("Connect to Redis Failed: {0}:{1}", item.Ip, item.Port),
+                            true
+                        );
+                    }
+                }
+
+                if (bIsConnected)
+                {
+                    bool bSendPing = true;
+                    if (bIsNeedSendPwd)
+                    {
+                        bool bIsLoginSuccess = SendPwd(item.TcpClient, item.Pwd);
+                        bSendPing = bIsLoginSuccess;
+                    }
+
+                    if (bSendPing)
+                    {
+                        bOnline = SendPing(item.TcpClient);
+                    }
                 }
 
                 ls.Add(new RedisStatusInfo
@@ -224,15 +237,17 @@ namespace ServiceStack.Redis.Utils
             return false;
         }
 
-        private void SendPwd(TcpClient client, string pwd)
+        private bool SendPwd(TcpClient client, string pwd)
         {
             if (!string.IsNullOrEmpty(pwd))
             {
-
+                return true;
             }
+
+            return true;
         }
 
-        private void StartTcpClientConnect(TcpClient client, string ip, int port)
+        private bool StartTcpClientConnect(TcpClient client, string ip, int port)
         {
             try
             {
@@ -246,6 +261,8 @@ namespace ServiceStack.Redis.Utils
                     e: ex
                 );
             }
+
+            return client.Connected;
         }
 
         private byte[] SendAndRecv(TcpClient client,
@@ -282,6 +299,8 @@ namespace ServiceStack.Redis.Utils
             }
             catch (Exception ex)
             {
+                client.Close();
+
                 CommonLogger.WriteLog(
                     ELogCategory.Fatal,
                     string.Format("ServiceStack.Redis.Utils SendAndRecv Exception: {0}", ex.Message),
