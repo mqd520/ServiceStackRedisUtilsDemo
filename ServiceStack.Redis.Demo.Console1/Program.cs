@@ -27,99 +27,99 @@ namespace ServiceStack.Redis.Demo.Console1
                 foreach (var item in ls)
                 {
                     ConsoleHelper.WriteLine(
-                        ELogCategory.Debug,
-                        string.Format("Redis Status Changed: {0}, IsOnline = {1}", item.Addr, item.IsOnline),
+                        item.IsOnline ? ELogCategory.Info : ELogCategory.Warn,
+                        string.Format("Redis Changed: {0}, IsOnline = {1}", item.Addr, item.IsOnline),
                         true
                     );
                 }
             };
 
             #region Write key Task
-            Task.Factory.StartNew(() =>
-            {
-                while (true)
-                {
-                    if (_nExitCode > 0)
-                    {
-                        break;
-                    }
+            //Task.Factory.StartNew(() =>
+            //{
+            //    while (true)
+            //    {
+            //        if (_nExitCode > 0)
+            //        {
+            //            break;
+            //        }
 
-                    IRedisClient client = null;
-                    try
-                    {
-                        //using (client = ServiceStackRedisUtils.GetClient())
-                        //{
-                        //    string str = Guid.NewGuid().ToString();
-                        //    client.Set("key", str);
-                        //    ConsoleHelper.WriteLine(
-                        //        ELogCategory.Info,
-                        //        string.Format("{0}: Set key = {1}", client.Host, str),
-                        //        true
-                        //    );
-                        //}
-                    }
-                    catch (Exception ex)
-                    {
-                        if (client != null)
-                        {
-                            client.Dispose();
-                        }
+            //        IRedisClient client = null;
+            //        try
+            //        {
+            //            //using (client = ServiceStackRedisUtils.GetClient())
+            //            //{
+            //            //    string str = Guid.NewGuid().ToString();
+            //            //    client.Set("key", str);
+            //            //    ConsoleHelper.WriteLine(
+            //            //        ELogCategory.Info,
+            //            //        string.Format("{0}: Set key = {1}", client.Host, str),
+            //            //        true
+            //            //    );
+            //            //}
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            if (client != null)
+            //            {
+            //                client.Dispose();
+            //            }
 
-                        ConsoleHelper.WriteLine(
-                            ELogCategory.Fatal,
-                            string.Format("Write Redis Key Task Exception: ", ex.Message),
-                            true,
-                            e: ex
-                        );
-                    }
+            //            ConsoleHelper.WriteLine(
+            //                ELogCategory.Fatal,
+            //                string.Format("Write Redis Key Task Exception: ", ex.Message),
+            //                true,
+            //                e: ex
+            //            );
+            //        }
 
-                    Thread.Sleep(1300);
-                }
+            //        Thread.Sleep(1300);
+            //    }
 
-                _semaphore.Release();
-            });
+            //    _semaphore.Release();
+            //});
             #endregion
 
-            Thread.Sleep(500);
+            //Thread.Sleep(500);
 
             #region Read Key Task
-            Task.Factory.StartNew(() =>
-            {
-                while (true)
-                {
-                    if (_nExitCode > 0)
-                    {
-                        break;
-                    }
+            //Task.Factory.StartNew(() =>
+            //{
+            //    while (true)
+            //    {
+            //        if (_nExitCode > 0)
+            //        {
+            //            break;
+            //        }
 
-                    try
-                    {
-                        //using (var client = ServiceStackRedisUtils.GetReadOnlyClient())
-                        //{
-                        //    string str = Guid.NewGuid().ToString();
-                        //    string value = client.Get<string>("key");
-                        //    ConsoleHelper.WriteLine(
-                        //        ELogCategory.Info,
-                        //        string.Format("{0}: Get key = {1}", client.Host, value),
-                        //        true
-                        //    );
-                        //}
-                    }
-                    catch (Exception ex)
-                    {
-                        ConsoleHelper.WriteLine(
-                            ELogCategory.Fatal,
-                            string.Format("Read Redis Key Task Exception: ", ex.Message),
-                            true,
-                            e: ex
-                        );
-                    }
+            //        try
+            //        {
+            //            using (var client = ServiceStackRedisUtils.GetReadOnlyClient())
+            //            {
+            //                string str = Guid.NewGuid().ToString();
+            //                string value = client.Get<string>("key");
+            //                ConsoleHelper.WriteLine(
+            //                    ELogCategory.Info,
+            //                    string.Format("{0}: Get key = {1}", client.Host, value),
+            //                    true
+            //                );
+            //            }
+            //        }
+            //        catch (Exception ex)
+            //        {
+            //            ConsoleHelper.WriteLine(
+            //                ELogCategory.Fatal,
+            //                string.Format("Read Redis Key Task Exception: ", ex.Message),
+            //                true,
+            //                e: ex
+            //            );
+            //        }
 
-                    Thread.Sleep(1 * 1000);
-                }
+            //        Thread.Sleep(1 * 1000);
+            //    }
 
-                _semaphore2.Release();
-            });
+            //    _semaphore2.Release();
+            //});
             #endregion
 
 
@@ -134,6 +134,21 @@ namespace ServiceStack.Redis.Demo.Console1
                     _semaphore2.WaitOne(1 * 1000);
 
                     break;
+                }
+                else
+                {
+                    try
+                    {
+                        using (var client = ServiceStackRedisUtils.GetReadOnlyClient())
+                        {
+                            string value = client.Get<string>("key");
+                            Console.WriteLine(value);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                 }
             }
 

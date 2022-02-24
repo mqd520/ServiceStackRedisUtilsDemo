@@ -49,11 +49,6 @@ namespace ServiceStack.Redis.Utils
         public static string SentinelNodePwd { get; private set; } = null;
 
         /// <summary>
-        /// Get Max Allow Re Get Client
-        /// </summary>
-        public static int MaxAllowReGetClient { get; private set; } = 10;
-
-        /// <summary>
         /// Get Is KeepAlive Mode
         /// </summary>
         public static bool IsKeepAliveMode { get; private set; }
@@ -176,53 +171,69 @@ namespace ServiceStack.Redis.Utils
                     client.Password = SentinelNodePwd;
                 }
 
+                return client;
+            }
+            else
+            {
+                IRedisClient client = Prcm.GetReadOnlyClient();
                 if (IsKeepAliveMode)
                 {
-                    int count = 0;
-                    while (count <= MaxAllowReGetClient)
+                    var lsInvalidRedisHost = new List<string>();
+                    var lsReadOnlyRedisHost = RedisConfigSection.ReadOnlyHosts.Split(',').Select(x => x.Trim()).ToArray();
+                    while (true)
                     {
+                        if (IsEquals(lsInvalidRedisHost, lsReadOnlyRedisHost))
+                        {
+                            client.Dispose();
+                            client = null;
+
+                            break;
+                        }
+
                         if (KeepAliveService.Instance.IsAvaiable(client))
                         {
                             break;
                         }
                         else
                         {
-                            client.Dispose();
-                            client = null;
-                            client = Rcm.GetReadOnlyClient();
+                            lsInvalidRedisHost.Add(client.Host);
 
-                            count++;
+                            client.Dispose();
+                            client = Prcm.GetReadOnlyClient();
                         }
+                    }
+
+                    if (client == null)
+                    {
+                        throw new Exception("No Avaliable Redis");
                     }
                 }
 
                 return client;
             }
-            else
+        }
+
+        private static bool IsEquals(IList<string> ls, IList<string> ls2)
+        {
+            if (ls.Count == ls2.Count && ls.Count > 0 && ls.Count > 0)
             {
-                var client = Prcm.GetReadOnlyClient();
-
-                if (IsKeepAliveMode)
+                bool b = true;
+                foreach (var item in ls)
                 {
-                    int count = 0;
-                    while (count <= MaxAllowReGetClient)
+                    int n = ls2.Count(x => x.Equals(item));
+                    if (n == 0)
                     {
-                        if (KeepAliveService.Instance.IsAvaiable(client))
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            client.Dispose();
-                            client = null;
-                            client = Prcm.GetReadOnlyClient();
+                        b = false;
 
-                            count++;
-                        }
+                        break;
                     }
                 }
 
-                return client;
+                return b;
+            }
+            else
+            {
+                return false;
             }
         }
         #endregion
