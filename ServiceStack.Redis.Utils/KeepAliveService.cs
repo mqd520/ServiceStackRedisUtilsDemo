@@ -134,11 +134,11 @@ namespace ServiceStack.Redis.Utils
                         item.TcpClient.Close();
                         item.TcpClient = null;
 
-                        ConsoleHelper.WriteLine(
-                            ELogCategory.Warn,
-                            string.Format("Connect to Redis Failed: {0}:{1}", item.Ip, item.Port),
-                            true
-                        );
+                        //ConsoleHelper.WriteLine(
+                        //    ELogCategory.Warn,
+                        //    string.Format("Connect to Redis Failed: {0}:{1}", item.Ip, item.Port),
+                        //    true
+                        //);
                     }
                 }
 
@@ -163,7 +163,7 @@ namespace ServiceStack.Redis.Utils
                     IsOnline = bOnline
                 });
 
-                Console.WriteLine();
+                //Console.WriteLine();
                 System.Threading.Thread.SpinWait(300);
             }
 
@@ -243,36 +243,36 @@ namespace ServiceStack.Redis.Utils
         private bool SendPing(TcpClient client)
         {
             var buf = RedisCmdUtils.Ping();
-            ConsoleHelper.WriteLine(
-                ELogCategory.Info,
-                string.Format("Send Ping To {0}", GetAddress(client)),
-                true
-            );
+            //ConsoleHelper.WriteLine(
+            //    ELogCategory.Info,
+            //    string.Format("Send Ping To {0}", GetAddress(client)),
+            //    true
+            //);
             var buf2 = SendAndRecv(client, buf, 0, buf.Length, 1 * 1000, 3 * 1000);
             if (buf2 != null)
             {
                 string str = Encoding.UTF8.GetString(buf2);
-                ConsoleHelper.WriteLine(
-                    ELogCategory.Info,
-                    string.Format("Recv Data From {0}: {1}", client.Client.RemoteEndPoint.ToString(), ReplaceLastRF(str)),
-                    true
-                );
+                //ConsoleHelper.WriteLine(
+                //    ELogCategory.Info,
+                //    string.Format("Recv Data From {0}: {1}", client.Client.RemoteEndPoint.ToString(), ReplaceLastRF(str)),
+                //    true
+                //);
                 if (str.Contains("PONG"))
                 {
-                    ConsoleHelper.WriteLine(
-                        ELogCategory.Info,
-                        string.Format("Recv Pong From {0} Success", GetAddress(client)),
-                        true
-                    );
+                    //ConsoleHelper.WriteLine(
+                    //    ELogCategory.Info,
+                    //    string.Format("Recv Pong From {0} Success", GetAddress(client)),
+                    //    true
+                    //);
                     return true;
                 }
             }
 
-            ConsoleHelper.WriteLine(
-                ELogCategory.Warn,
-                string.Format("Recv Pong From {0} Fail", GetAddress(client)),
-                true
-            );
+            //ConsoleHelper.WriteLine(
+            //    ELogCategory.Warn,
+            //    string.Format("Recv Pong From {0} Fail", GetAddress(client)),
+            //    true
+            //);
             client.Close();
 
             return false;
@@ -283,39 +283,39 @@ namespace ServiceStack.Redis.Utils
             if (!string.IsNullOrEmpty(pwd))
             {
                 var buf = RedisCmdUtils.Auth(pwd);
-                ConsoleHelper.WriteLine(
-                    ELogCategory.Info,
-                    string.Format("Send Auth To {0}: {1}", GetAddress(client), pwd),
-                    true
-                );
+                //ConsoleHelper.WriteLine(
+                //    ELogCategory.Info,
+                //    string.Format("Send Auth To {0}: {1}", GetAddress(client), pwd),
+                //    true
+                //);
 
                 var buf2 = SendAndRecv(client, buf, 0, buf.Length, 1 * 1000, 3 * 1000);
                 if (buf2 != null)
                 {
                     string str = Encoding.UTF8.GetString(buf2);
-                    ConsoleHelper.WriteLine(
-                        ELogCategory.Info,
-                        string.Format("Recv Data From {0}: {1}", GetAddress(client), ReplaceLastRF(str)),
-                        true
-                    );
+                    //ConsoleHelper.WriteLine(
+                    //    ELogCategory.Info,
+                    //    string.Format("Recv Data From {0}: {1}", GetAddress(client), ReplaceLastRF(str)),
+                    //    true
+                    //);
                     if (str.Contains("OK"))
                     {
-                        ConsoleHelper.WriteLine(
-                            ELogCategory.Info,
-                            string.Format("Send Auth {0} Success", GetAddress(client)),
-                            true
-                        );
+                        //ConsoleHelper.WriteLine(
+                        //    ELogCategory.Info,
+                        //    string.Format("Send Auth {0} Success", GetAddress(client)),
+                        //    true
+                        //);
 
                         return true;
                     }
                 }
             }
 
-            ConsoleHelper.WriteLine(
-                ELogCategory.Warn,
-                string.Format("Send Auth {0} Failed", GetAddress(client)),
-                true
-            );
+            //ConsoleHelper.WriteLine(
+            //    ELogCategory.Warn,
+            //    string.Format("Send Auth {0} Failed", GetAddress(client)),
+            //    true
+            //);
             client.Close();
 
             return false;
@@ -323,11 +323,11 @@ namespace ServiceStack.Redis.Utils
 
         private bool StartTcpClientConnect(TcpClient client, string ip, int port)
         {
-            ConsoleHelper.WriteLine(
-                ELogCategory.Info,
-                string.Format("Connecting Redis Server: {0}:{1}", ip, port),
-                true
-            );
+            //ConsoleHelper.WriteLine(
+            //    ELogCategory.Info,
+            //    string.Format("Connecting Redis Server: {0}:{1}", ip, port),
+            //    true
+            //);
 
             try
             {
