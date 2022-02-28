@@ -26,7 +26,7 @@ namespace ServiceStack.Redis.Demo.Console1
         {
             XmlConfigurator.Configure(new FileInfo(AppDomain.CurrentDomain.BaseDirectory + "log4net.config"));
             ConsoleHelper.WriteLine(ELogCategory.Info, string.Format("ServiceStack.Redis.Demo.Console1 Startup..."), true);
-
+            
             ServiceStackRedisUtils.Init();
             ServiceStackRedisUtils.RedisStatusChangedHandle = ls =>
             {
@@ -145,11 +145,14 @@ namespace ServiceStack.Redis.Demo.Console1
                 {
                     try
                     {
-                        using (var client = ServiceStackRedisUtils.GetReadOnlyClient())
-                        {
-                            string value = client.Get<string>("key");
-                            Console.WriteLine(value);
-                        }
+                        //using (var client = ServiceStackRedisUtils.GetReadOnlyClient())
+                        //{
+                        //    string value = client.Get<string>("key");
+                        //    Console.WriteLine(value);
+                        //}
+
+                        var nrc = new RedisNativeClient("192.168.202", 6379);
+                        bool b = nrc.Ping();
                     }
                     catch (Exception ex)
                     {
