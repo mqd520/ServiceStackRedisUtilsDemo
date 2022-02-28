@@ -112,14 +112,13 @@ namespace ServiceStack.Redis.Utils
             _tKeepAlive.Stop();
 
             IList<RedisStatusInfo> ls = new List<RedisStatusInfo>();
-
             foreach (var item in _lsKeepAliveInfos)
             {
                 bool bOnline = false;
                 string addr = string.Format("{0}:{1}", item.Ip, item.Port);
 
                 bool bIsConnected = true;
-                if (item.TcpClient == null || (item.TcpClient != null && item.TcpClient.Client == null))
+                if (item.TcpClient == null || (item.TcpClient != null && item.TcpClient.Connected == false))
                 {
                     item.TcpClient = new TcpClient();
                     bIsConnected = false;
@@ -163,6 +162,9 @@ namespace ServiceStack.Redis.Utils
                     Addr = addr,
                     IsOnline = bOnline
                 });
+
+                Console.WriteLine();
+                System.Threading.Thread.SpinWait(300);
             }
 
             var lsStatusChanged = new List<RedisStatusInfo>();
@@ -205,12 +207,45 @@ namespace ServiceStack.Redis.Utils
             _tKeepAlive.Start();
         }
 
+        private string ReplaceLastRF(string str)
+        {
+            if (!string.IsNullOrEmpty(str))
+            {
+                int n = str.Length;
+                if (n >= 2)
+                {
+                    if ((int)str[n - 2] == 13 && (int)str[n - 1] == 10)
+                    {
+                        return str.Substring(0, n - 2);
+                    }
+                }
+            }
+
+            return str;
+        }
+
+        private KeepAliveInfo GetKeepAliveInfo(TcpClient client)
+        {
+            return _lsKeepAliveInfos.Where(x => x.TcpClient == client).FirstOrDefault();
+        }
+
+        private string GetAddress(TcpClient client)
+        {
+            var item = GetKeepAliveInfo(client);
+            if (item != null)
+            {
+                return string.Format("{0}:{1}", item.Ip, item.Port);
+            }
+
+            return "";
+        }
+
         private bool SendPing(TcpClient client)
         {
             var buf = RedisCmdUtils.Ping();
             ConsoleHelper.WriteLine(
                 ELogCategory.Info,
-                string.Format("Send Ping To {0}", client.Client.RemoteEndPoint.ToString()),
+                string.Format("Send Ping To {0}", GetAddress(client)),
                 true
             );
             var buf2 = SendAndRecv(client, buf, 0, buf.Length, 1 * 1000, 3 * 1000);
@@ -219,20 +254,26 @@ namespace ServiceStack.Redis.Utils
                 string str = Encoding.UTF8.GetString(buf2);
                 ConsoleHelper.WriteLine(
                     ELogCategory.Info,
-                    string.Format("Recv Pong From {0}: {1}", client.Client.RemoteEndPoint.ToString(), str),
+                    string.Format("Recv Data From {0}: {1}", client.Client.RemoteEndPoint.ToString(), ReplaceLastRF(str)),
                     true
                 );
                 if (str.Contains("PONG"))
                 {
+                    ConsoleHelper.WriteLine(
+                        ELogCategory.Info,
+                        string.Format("Recv Pong From {0} Success", GetAddress(client)),
+                        true
+                    );
                     return true;
                 }
             }
 
             ConsoleHelper.WriteLine(
                 ELogCategory.Warn,
-                string.Format("Recv Pong From {0} Failed.", client.Client.RemoteEndPoint.ToString()),
+                string.Format("Recv Pong From {0} Fail", GetAddress(client)),
                 true
             );
+            client.Close();
 
             return false;
         }
@@ -241,14 +282,53 @@ namespace ServiceStack.Redis.Utils
         {
             if (!string.IsNullOrEmpty(pwd))
             {
-                return true;
+                var buf = RedisCmdUtils.Auth(pwd);
+                ConsoleHelper.WriteLine(
+                    ELogCategory.Info,
+                    string.Format("Send Auth To {0}: {1}", GetAddress(client), pwd),
+                    true
+                );
+
+                var buf2 = SendAndRecv(client, buf, 0, buf.Length, 1 * 1000, 3 * 1000);
+                if (buf2 != null)
+                {
+                    string str = Encoding.UTF8.GetString(buf2);
+                    ConsoleHelper.WriteLine(
+                        ELogCategory.Info,
+                        string.Format("Recv Data From {0}: {1}", GetAddress(client), ReplaceLastRF(str)),
+                        true
+                    );
+                    if (str.Contains("OK"))
+                    {
+                        ConsoleHelper.WriteLine(
+                            ELogCategory.Info,
+                            string.Format("Send Auth {0} Success", GetAddress(client)),
+                            true
+                        );
+
+                        return true;
+                    }
+                }
             }
 
-            return true;
+            ConsoleHelper.WriteLine(
+                ELogCategory.Warn,
+                string.Format("Send Auth {0} Failed", GetAddress(client)),
+                true
+            );
+            client.Close();
+
+            return false;
         }
 
         private bool StartTcpClientConnect(TcpClient client, string ip, int port)
         {
+            ConsoleHelper.WriteLine(
+                ELogCategory.Info,
+                string.Format("Connecting Redis Server: {0}:{1}", ip, port),
+                true
+            );
+
             try
             {
                 client.ConnectAsync(ip, port).Wait(ServiceStackRedisUtils.RedisConfigSection.ConnectTimeout);
@@ -275,7 +355,7 @@ namespace ServiceStack.Redis.Utils
             try
             {
                 var ns = client.GetStream();
-                ns.WriteAsync(buf, 0, buf.Length).Wait(writeTimeout);
+                bool b = ns.WriteAsync(buf, 0, buf.Length).Wait(writeTimeout);
 
                 long timestamp = DateTime.Now.GetMilliTimestamp();
                 while (true)
